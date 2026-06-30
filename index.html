@@ -6,6 +6,16 @@
     <title>Prompt Enhancer | AI Text Refinement Tool</title>
     <meta name="description" content="Free tool to refine prompts and texts using AI. Improve clarity, detail, and effectiveness." />
 
+    <!-- ===== GOOGLE ANALYTICS (gtag.js) ===== -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-781HE6SX64"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-781HE6SX64');
+    </script>
+    <!-- ===== END GOOGLE ANALYTICS ===== -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
@@ -436,6 +446,19 @@
     </footer>
 
     <script>
+        // ==================== GOOGLE ANALYTICS EVENTS ====================
+        // هتسجل الأحداث المهمة عشان تحلل سلوك المستخدمين
+
+        function trackEvent(action, label, value) {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', action, {
+                    event_category: 'User Action',
+                    event_label: label || null,
+                    value: value || null
+                });
+            }
+        }
+
         // ==================== CONFIG ====================
         const GROQ_API_KEY = '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';
 
@@ -452,6 +475,8 @@
             const el = document.getElementById('errorMsg');
             el.textContent = msg;
             el.style.display = 'block';
+            // تسجيل الخطأ في Google Analytics
+            trackEvent('error', 'Enhancement Error: ' + msg);
             setTimeout(() => { el.style.display = 'none'; }, 6000);
         }
 
@@ -464,8 +489,12 @@
                 document.getElementById('inputPrompt').focus();
                 document.getElementById('inputPrompt').style.borderColor = '#ef4444';
                 setTimeout(() => document.getElementById('inputPrompt').style.borderColor = '', 1500);
+                trackEvent('enhance_attempt', 'empty_prompt');
                 return;
             }
+
+            // تسجيل محاولة التحسين
+            trackEvent('enhance_attempt', 'prompt_length_' + input.length);
 
             // Loading state
             const btn = document.getElementById('improveBtn');
@@ -479,6 +508,8 @@
             btnText.textContent = 'Enhancing…';
 
             document.getElementById('resultCard').style.display = 'none';
+
+            const startTime = Date.now();
 
             try {
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -523,6 +554,10 @@
 
                 document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
+                // تسجيل نجاح التحسين مع وقت الاستجابة
+                const duration = Date.now() - startTime;
+                trackEvent('enhance_success', 'duration_' + duration + 'ms');
+
             } catch (error) {
                 console.error('Error:', error);
                 showError('❌ ' + (error.message || 'Something went wrong. Check your internet connection.'));
@@ -546,6 +581,9 @@
                 copyText.textContent = '✅ Copied!';
                 copyIcon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
 
+                // تسجيل حدث النسخ
+                trackEvent('copy_result', 'text_length_' + text.length);
+
                 setTimeout(resetCopyBtn, 2000);
             });
         }
@@ -562,11 +600,24 @@
 
         // ==================== CTRL+ENTER SHORTCUT ====================
         document.getElementById('inputPrompt').addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') improvePrompt();
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                improvePrompt();
+                // تسجيل استخدام الاختصار
+                trackEvent('shortcut', 'ctrl_enter');
+            }
         });
 
         // ==================== INIT ====================
         updateCharCount();
+
+        // ==================== TRACK PAGE VIEW (already tracked by gtag) ====================
+        // تسجيل إضافي عند تحميل الصفحة
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'page_loaded', {
+                event_category: 'Page Load',
+                event_label: 'Prompt Enhancer Main Page'
+            });
+        }
     </script>
 </body>
-</html>
+</html> 
